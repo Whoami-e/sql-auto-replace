@@ -1,0 +1,87 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.whoami.sql-auto-replace</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>SQL Auto Replace</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="1695033362@qq.com" url="https://github.com/Whoami-e">whoami</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+    <p><strong>SQL Abbreviation Expander: Code Faster with Shortcuts</strong></p>
+
+    <p>This plugin is designed for developers and data professionals who work extensively with SQL in IntelliJ-based IDEs (IDEA, DataGrip, PyCharm). It eliminates the tedium of typing common SQL syntax over and over again.</p>
+
+    <p><strong>How it works:</strong><br/>
+    1. <strong>Pre-configure</strong> your own dictionary of shortcuts and their corresponding SQL snippets.<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;Example: <code>sf</code> -&gt; <code>SELECT * FROM </code>, <code>scf</code> -&gt; <code>SELECT COUNT(*) FROM </code>, <code>ij</code> -&gt; <code>INNER JOIN </code>.<br/>
+    2. <strong>Type</strong> your abbreviation directly in the editor.<br/>
+    3. <strong>Press</strong> your dedicated hotkey (e.g., <code>Alt + ;</code>).<br/>
+    4. <strong>Watch</strong> the abbreviation instantly expand into the full, desired SQL code.</p>
+
+    <p><strong>Benefits:</strong><br/>
+    • <strong>Significantly increase</strong> coding speed and reduce keystrokes.<br/>
+    • <strong>Reduce syntax errors</strong> from manual typing.<br/>
+    • <strong>Fully customizable</strong> to match your personal workflow and preferences.<br/>
+    • <strong>Ideal for</strong> writing queries, procedures, and any SQL-related scripts.</p>
+
+    <hr/>
+
+    <p><strong>SQL缩写扩展器：用快捷方式更快地编写代码</strong></p>
+
+    <p>本插件专为在基于IntelliJ的IDE（IDEA, DataGrip, PyCharm）中大量编写SQL的开发者和数据专业人士设计。它彻底消除了重复输入常见SQL语式的繁琐工作。</p>
+
+    <p><strong>工作原理:</strong><br/>
+    1. <strong>预配置</strong>您自己的快捷方式和对应SQL片段的字典。<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;示例: <code>sf</code> -&gt; <code>SELECT * FROM </code>, <code>scf</code> -&gt; <code>SELECT COUNT(*) FROM </code>, <code>ij</code> -&gt; <code>INNER JOIN </code>。<br/>
+    2. <strong>在编辑器中</strong>直接输入您的缩写。<br/>
+    3. <strong>按下</strong>您指定的专用快捷键（如 <code>Tab</code> 或 <code>Ctrl+Space</code>）。<br/>
+    4. <strong>见证</strong>缩写瞬间扩展成完整的目标SQL代码。</p>
+
+    <p><strong>主要优势:</strong><br/>
+    • <strong>显著提高</strong>编码速度，减少击键次数。<br/>
+    • <strong>减少</strong>因手动输入造成的语法错误。<br/>
+    • <strong>完全可定制</strong>，以符合您的个人工作流程和偏好。<br/>
+    • <strong>是编写</strong>查询、存储过程以及任何SQL相关脚本的理想工具。</p>
+
+    <p><strong>感谢您的使用！</strong></p>
+    ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- 注册设置服务 -->
+        <projectService serviceImplementation="com.whoami.sqlautoreplace.settings.SqlAutoReplaceSettings"/>
+        <projectService serviceImplementation="com.whoami.sqlautoreplace.settings.SqlAutoReplaceKeySettings"/>
+        <projectService serviceImplementation="com.whoami.sqlautoreplace.keymap.SqlAutoReplaceKeymapManager"/>
+        
+        <!-- 注册设置界面 -->
+        <projectConfigurable parentId="tools" 
+                             instance="com.whoami.sqlautoreplace.settings.SqlAutoReplaceConfigurable"
+                             id="com.whoami.sqlautoreplace.settings.SqlAutoReplaceConfigurable"
+                             displayName="SQL Auto Replace"/>
+                             
+        <!-- 注册启动活动 -->
+        <postStartupActivity implementation="com.whoami.sqlautoreplace.startup.SqlAutoReplaceStartupActivity"/>
+    </extensions>
+    
+    <!-- 注册动作 -->
+    <actions>
+        <action id="com.whoami.sqlautoreplace.action.SqlAutoReplaceAction"
+                class="com.whoami.sqlautoreplace.action.SqlAutoReplaceAction"
+                text="Expand SQL Abbreviation"
+                description="Expand SQL abbreviation to full SQL code">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt SEMICOLON"/>
+        </action>
+    </actions>
+</idea-plugin>
