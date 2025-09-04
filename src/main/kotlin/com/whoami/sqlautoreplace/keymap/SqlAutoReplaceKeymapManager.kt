@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.KeyboardShortcut
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.keymap.Keymap
 import com.intellij.openapi.keymap.KeymapManager
+import com.intellij.openapi.keymap.KeymapUtil
 import com.intellij.openapi.project.Project
 import com.whoami.sqlautoreplace.settings.SqlAutoReplaceKeySettings
 import javax.swing.KeyStroke
@@ -23,17 +24,35 @@ class SqlAutoReplaceKeymapManager(private val project: Project) {
         val keyStroke = keySettings.getKeyStroke()
         
         try {
-            if (keyStroke != null) {
-                val actionManager = ActionManager.getInstance()
-                val actionId = "com.whoami.sqlautoreplace.action.SqlAutoReplaceAction"
-                val action = actionManager.getAction(actionId)
-                if (action != null) {
-                    val keymap = KeymapManager.getInstance().activeKeymap
+            val actionManager = ActionManager.getInstance()
+            val actionId = "com.whoami.sqlautoreplace.action.SqlAutoReplaceAction"
+            val action = actionManager.getAction(actionId)
+            if (action != null) {
+                val keymap = KeymapManager.getInstance().activeKeymap
+                if (keyStroke != null) {
+                    // 检查快捷键是否可能与系统冲突
+                    if (keySettings.isPotentialKeyConflict(keyStroke)) {
+                        // 记录可能的冲突，但仍然应用用户的选择
+                        // 因为用户在设置界面已经被警告并确认使用此快捷键
+                        println("警告：使用可能与系统冲突的快捷键: ${KeymapUtil.getKeystrokeText(keyStroke)}")
+                    }
                     updateKeymapShortcut(keymap, actionId, keyStroke)
+                } else {
+                    // 如果没有设置快捷键，使用默认的 Alt+;
+                    val defaultKeyStroke = KeyStroke.getKeyStroke("alt SEMICOLON")
+                    if (defaultKeyStroke != null) {
+                        updateKeymapShortcut(keymap, actionId, defaultKeyStroke)
+                    }
                 }
             }
         } catch (e: Exception) {
-            // 处理异常情况
+            // 处理异常情况，使用默认快捷键
+            val defaultKeyStroke = KeyStroke.getKeyStroke("alt SEMICOLON")
+            if (defaultKeyStroke != null) {
+                val actionId = "com.whoami.sqlautoreplace.action.SqlAutoReplaceAction"
+                val keymap = KeymapManager.getInstance().activeKeymap
+                updateKeymapShortcut(keymap, actionId, defaultKeyStroke)
+            }
         }
     }
 

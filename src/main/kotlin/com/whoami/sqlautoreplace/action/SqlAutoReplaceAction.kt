@@ -6,7 +6,9 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.CaretModel
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.keymap.KeymapUtil
 import com.intellij.openapi.project.Project
+import com.whoami.sqlautoreplace.settings.SqlAutoReplaceKeySettings
 import com.whoami.sqlautoreplace.settings.SqlAutoReplaceSettings
 
 /**
@@ -19,6 +21,20 @@ class SqlAutoReplaceAction : AnAction() {
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
         val caretModel = editor.caretModel
         
+        // 添加调试信息
+        println("SQL Auto Replace Action triggered!")
+        
+        // 获取当前使用的快捷键设置
+        val keySettings = SqlAutoReplaceKeySettings.getInstance(project)
+        val keyStroke = keySettings.getKeyStroke()
+        
+        // 检查是否是可能冲突的快捷键
+        if (keyStroke != null && keySettings.isPotentialKeyConflict(keyStroke)) {
+            println("使用可能冲突的快捷键触发动作: ${KeymapUtil.getKeystrokeText(keyStroke)}")
+            // 对于可能冲突的快捷键，我们需要确保动作被正确触发
+            // 这里可以添加特殊处理逻辑，但目前我们只是记录日志并继续执行
+        }
+        
         // 直接执行替换
         expandAbbreviation(project, editor, caretModel)
     }
@@ -27,6 +43,9 @@ class SqlAutoReplaceAction : AnAction() {
         val document = editor.document
         val settings = SqlAutoReplaceSettings.getInstance(project)
         val abbreviationMap = settings.abbreviationMap
+
+        println("Abbreviation map size: ${abbreviationMap.size}")
+        println("Abbreviation map: $abbreviationMap")
 
         // 获取当前光标位置
         val offset = caretModel.offset
@@ -39,6 +58,9 @@ class SqlAutoReplaceAction : AnAction() {
         val textBeforeCaret = lineText.substring(0, offset - lineStartOffset)
         val possibleAbbreviation = findPossibleAbbreviation(textBeforeCaret)
 
+        println("Text before caret: '$textBeforeCaret'")
+        println("Possible abbreviation: '$possibleAbbreviation'")
+
         // 检查是否找到了有效的缩写（忽略大小写）
         if (possibleAbbreviation.isNotEmpty()) {
             // 查找匹配的缩写（忽略大小写）
@@ -50,13 +72,20 @@ class SqlAutoReplaceAction : AnAction() {
                 val expansion = matchingEntry.value
                 val abbreviationStartOffset = offset - possibleAbbreviation.length
 
+                println("Found match: '${matchingEntry.key}' -> '$expansion'")
+
                 // 在写命令中执行替换操作
                 WriteCommandAction.runWriteCommandAction(project) {
                     document.replaceString(abbreviationStartOffset, offset, expansion)
                     // 移动光标到替换后的位置
                     caretModel.moveToOffset(abbreviationStartOffset + expansion.length)
                 }
+                println("Replacement completed!")
+            } else {
+                println("No matching abbreviation found for: '$possibleAbbreviation'")
             }
+        } else {
+            println("No abbreviation found before cursor")
         }
     }
 

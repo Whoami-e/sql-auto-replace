@@ -42,22 +42,64 @@ class SqlAutoReplaceSettingsComponent(private val project: Project) {
         keyTextField.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 val keyStroke = KeyStroke.getKeyStrokeForEvent(e)
-                keyTextField.text = keyStroke.toString().replace("pressed ", "")
-                keySettings.setKeyStroke(keyStroke)
+                
+                // 检查快捷键是否可能与系统冲突
+                if (keySettings.isPotentialKeyConflict(keyStroke)) {
+                    val osName = System.getProperty("os.name")
+                    val isMac = osName.toLowerCase().contains("mac")
+                    val isWindows = osName.toLowerCase().contains("win")
+                    val isLinux = osName.toLowerCase().contains("linux")
+                    
+                    val message = if (isMac) {
+                        "警告：您选择的快捷键在macOS上可能与系统功能或特殊字符输入冲突。\n" +
+                        "这可能导致快捷键无法正常工作或触发系统功能。\n" +
+                        "建议选择其他快捷键组合，或者使用非扩展输入法。\n\n" +
+                        "是否仍要使用此快捷键？"
+                    } else if (isWindows) {
+                        "警告：您选择的快捷键在Windows上可能与系统快捷键冲突。\n" +
+                        "这可能导致快捷键无法正常工作或触发系统功能。\n" +
+                        "建议选择其他快捷键组合。\n\n" +
+                        "是否仍要使用此快捷键？"
+                    } else if (isLinux) {
+                        "警告：您选择的快捷键在Linux上可能与系统快捷键冲突。\n" +
+                        "这可能导致快捷键无法正常工作或触发系统功能。\n" +
+                        "建议选择其他快捷键组合。\n\n" +
+                        "是否仍要使用此快捷键？"
+                    } else {
+                        "警告：您选择的快捷键可能与系统快捷键或IDE功能冲突。\n" +
+                        "这可能导致快捷键无法正常工作或触发其他功能。\n" +
+                        "是否仍要使用此快捷键？"
+                    }
+                    
+                    val result = Messages.showYesNoDialog(
+                        project,
+                        message,
+                        "快捷键冲突警告",
+                        Messages.getWarningIcon()
+                    )
+                    
+                    if (result == Messages.YES) {
+                        // 用户确认使用此快捷键
+                        keyTextField.text = keyStroke.toString().replace("pressed ", "")
+                        keySettings.setKeyStroke(keyStroke)
+                        // 立即保存状态
+                        keySettings.getState()
+                    }
+                } else {
+                    // 没有冲突，直接设置
+                    keyTextField.text = keyStroke.toString().replace("pressed ", "")
+                    keySettings.setKeyStroke(keyStroke)
+                    // 立即保存状态
+                    keySettings.getState()
+                }
+                
                 e.consume()
             }
         })
 
-        val setKeyButton = JButton("设置快捷键")
-        setKeyButton.addActionListener {
-            Messages.showInfoMessage(
-                "按下任意键组合设置为SQL扩展的快捷键。",
-                "设置快捷键"
-            )
-            keyTextField.requestFocus()
-        }
+        // 移除了设置快捷键按钮，用户可以直接点击文本框设置快捷键
+        keyTextField.toolTipText = "点击此处并按下任意键组合设置为SQL扩展的快捷键"
         keySettingPanel.add(keyTextField)
-        keySettingPanel.add(setKeyButton)
 
         // 添加到主面板
         val topPanel = JPanel(BorderLayout())
@@ -121,6 +163,8 @@ class SqlAutoReplaceSettingsComponent(private val project: Project) {
 
     fun apply(settings: SqlAutoReplaceSettings) {
         settings.abbreviationMap = getAbbreviationMap()
+        // 确保快捷键设置被保存
+        keySettings.getState() // 触发状态保存
     }
 
     fun reset(settings: SqlAutoReplaceSettings) {
